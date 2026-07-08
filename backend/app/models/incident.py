@@ -1,24 +1,29 @@
-from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from __future__ import annotations
 import enum
+from datetime import datetime, timezone
+from sqlalchemy import String, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db import Base
 
 class RiskLevel(str, enum.Enum):
-    low="low"
-    medium="medium"
-    high="high" 
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 class Incident(Base):
     __tablename__ = "incidents"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    source: Mapped[str] = mapped_column(String, nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False)          # "cloudwatch", "github", ...
     idempotency_key: Mapped[str] = mapped_column(String, unique=True, index=True)
-    raw_payload: Mapped[dict] = mapped_column(nullable=False)
+    raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(String, default="pending")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
-    diagnosis = relationship("Diagnosis", back_populates="incident", uselist=False)
-    evidence = relationship("Evidence", back_populates="incident")
-
+    diagnosis: Mapped["Diagnosis | None"] = relationship(back_populates="incident", uselist=False)
+    evidence: Mapped[list["Evidence"]] = relationship(back_populates="incident")
+    approval: Mapped["Approval | None"] = relationship(back_populates="incident", uselist=False)
