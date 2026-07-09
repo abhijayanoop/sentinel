@@ -6,8 +6,21 @@ __pycache__/
 !.env.example
 node_modules/
 dist/
-.terraform/
-*.tfstate
-*.tfstate.backup
 .DS_Store
 .claude
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*tfplan*
+.terraformrc
+terraform.rc
