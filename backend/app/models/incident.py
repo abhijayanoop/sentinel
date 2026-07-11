@@ -1,10 +1,16 @@
 from __future__ import annotations
 import enum
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from sqlalchemy import String, DateTime, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db import Base
+
+if TYPE_CHECKING:
+    from app.models.diagnosis import Diagnosis
+    from app.models.evidence import Evidence
+    from app.models.approval import Approval
 
 class RiskLevel(str, enum.Enum):
     low = "low"

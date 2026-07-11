@@ -1,9 +1,13 @@
 from __future__ import annotations
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db import Base
 from app.models.incident import utcnow
+
+if TYPE_CHECKING:
+    from app.models.incident import Incident
 
 
 class Approval(Base):
