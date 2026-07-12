@@ -1,7 +1,7 @@
 import json
 from app.core.llm import llm, get_model
 from app.agent.state import AgentState
-from app.agent.prompts import PLANNER_SYSTEM, SYNTHESIS_SYSTEM
+from app.agent.prompts import SYNTHESIS_SYSTEM
 from app.schemas.diagnosis import Diagnosis
 from app.tools.read.deploys import get_recent_deploys
 from app.tools.read.ecs_events import get_ecs_service_events
