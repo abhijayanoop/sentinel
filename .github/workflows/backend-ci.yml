@@ -16,6 +16,7 @@ jobs:
       DATABASE_URL: "sqlite+aiosqlite:///:memory:"
       WEBHOOK_SECRET: "ci-dummy-webhook-secret"
       JWT_SECRET: "ci-dummy-jwt-secret"
+      OPENAI_API_KEY: "ci-dummy-openai-key"
     steps:
       - uses: actions/checkout@v4
 
