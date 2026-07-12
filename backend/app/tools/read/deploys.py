@@ -16,7 +16,7 @@ class DeployResult(BaseModel):
 def get_recent_deploys(repo: str = "your-username/your-demo-repo", limit: int = 5) -> DeployResult:
     url = f"https://api.github.com/repos/{repo}/commits"
     headers = {"Accept": "application/vnd.github+json"}
-    if getattr(settings, "github_token", None):
+    if settings.github_token:
         headers["Authorization"] = f"Bearer {settings.github_token}"
 
     res = httpx.get(url, headers=headers, params={"per_page": limit}, timeout=10)

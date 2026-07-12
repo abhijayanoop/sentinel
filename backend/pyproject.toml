@@ -26,6 +26,13 @@ dependencies = [
     "uvicorn[standard]>=0.50.0",
 ]
 
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "jose.*"]
+ignore_missing_imports = true
+
 [dependency-groups]
 dev = [
     "aiosqlite>=0.21.0",

@@ -15,7 +15,7 @@ class MemoryResult(BaseModel):
 
 async def search_past_incidents(query: str, limit:int = 5) -> MemoryResult:
     query_embedding = embed_text(query)
-    with get_session() as session:
+    async with get_session() as session:
         stmt = (
             select(
                 IncidentMemory.summary, 
