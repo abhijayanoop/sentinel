@@ -1,3 +1,4 @@
+from typing import Any, Callable
 import json
 from app.core.llm import llm, get_model
 from app.agent.state import AgentState
@@ -9,7 +10,7 @@ from app.tools.read.logs import get_cloudwatch_logs
 from app.tools.read.memory import search_past_incidents
 from app.tools.read.metrics import get_metric_data
 
-READ_TOOLS = {
+READ_TOOLS: dict[str, Callable[..., Any]] = {
     "get_recent_deploys": get_recent_deploys,
     "get_metric_data": get_metric_data,
     "get_ecs_service_events": get_ecs_service_events,
@@ -17,7 +18,7 @@ READ_TOOLS = {
 }
 
 async def plan_and_gather(state: AgentState) -> AgentState:
-    evidence_list: list[str] = []
+    evidence_list: list[dict] = []
 
     try:
         memory = await search_past_incidents(state["incident_summary"])
