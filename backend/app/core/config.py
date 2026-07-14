@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o"
     openai_embedding_model: str = "text-embedding-3-small"
     github_token: str | None = None
+    redis_url: str = "redis://localhost:6379/0"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

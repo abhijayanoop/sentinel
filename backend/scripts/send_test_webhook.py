@@ -7,7 +7,7 @@ import os
 import httpx
 
 secret = os.environ["WEBHOOK_SECRET"]
-body = json.dumps({"alarmId": "abc123", "stateChangeTime": "2026-07-03T10:00:00Z"}).encode()
+body = json.dumps({"alarmId": "abc12348", "stateChangeTime": "2026-07-14T10:00:00Z"}).encode()
 signature = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 resp = httpx.post(
