@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"
     github_token: str | None = None
     redis_url: str = "redis://localhost:6379/0"
+    langfuse_secret_key: str = ""
+    langfuse_public_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
