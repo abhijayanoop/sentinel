@@ -1,0 +1,14 @@
+[
+  {
+    "id": "oom-after-deploy",
+    "summary": "backend service returned 500s 3 minutes after a deploy; memory climbed to 98% then the task was killed",
+    "expected_root_cause_keywords": ["memory", "deploy", "oom"],
+    "expected_risk": "high"
+  },
+  {
+    "id": "healthy-noise",
+    "summary": "brief CPU spike to 60% for 30 seconds during normal traffic, recovered on its own, no errors",
+    "expected_root_cause_keywords": ["transient", "normal", "no action"],
+    "expected_risk": "low"
+  }
+]
