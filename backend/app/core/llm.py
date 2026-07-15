@@ -3,7 +3,7 @@ from openai import OpenAI
 from app.core.config import settings
 
 if settings.langfuse_public_key and settings.langfuse_secret_key:
-    from app.core import tracing 
+    # from app.core import tracing 
     from langfuse.openai import OpenAI as TracedOpenAI
     _openai_client = TracedOpenAI(api_key=settings.openai_api_key)
 else:
