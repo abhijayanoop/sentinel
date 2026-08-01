@@ -1,9 +1,7 @@
 from typing import Any, Callable
 import json
-from sqlalchemy import select
 
 from app.core.db import get_session
-from app.models.diagnosis import Diagnosis as DiagnosisModel
 from app.models.approval import Approval
 from app.models.audit_log import AuditLog
 from app.core.approval_tokens import mint_approval_token
