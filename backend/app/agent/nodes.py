@@ -60,6 +60,8 @@ def synthesize_diagnosis(state: AgentState) -> AgentState:
 
 async def draft_action_and_request_approval(state: AgentState) -> AgentState:
     diagnosis = state["diagnosis"]
+    if diagnosis is None:
+        raise ValueError("draft_action_and_request_approval requires a diagnosis")
     incident_id = state["incident_id"]
 
     action = "restart_task"
@@ -99,6 +101,8 @@ async def escalate_high_risk(state: AgentState) -> AgentState:
 def route_on_risk(state: AgentState) -> str:
     """Conditional-edge function: decide the next node based on the diagnosis risk."""
     diagnosis = state["diagnosis"]
+    if diagnosis is None:
+        raise ValueError("route_on_risk requires a diagnosis")
     if diagnosis.risk_level.value == "high":
         return "escalate_high_risk"
     return "draft_action_and_request_approval"
