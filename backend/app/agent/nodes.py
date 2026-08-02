@@ -1,5 +1,11 @@
 from typing import Any, Callable
 import json
+
+from app.core.db import get_session
+from app.models.approval import Approval
+from app.models.audit_log import AuditLog
+from app.core.approval_tokens import mint_approval_token
+from app.core.logging import log
 from app.core.llm import llm, get_model
 from app.agent.state import AgentState
 from app.agent.prompts import SYNTHESIS_SYSTEM
@@ -51,3 +57,52 @@ def synthesize_diagnosis(state: AgentState) -> AgentState:
         ]
     )
     return {"diagnosis": diagnosis}
+
+async def draft_action_and_request_approval(state: AgentState) -> AgentState:
+    diagnosis = state["diagnosis"]
+    if diagnosis is None:
+        raise ValueError("draft_action_and_request_approval requires a diagnosis")
+    incident_id = state["incident_id"]
+
+    action = "restart_task"
+    if "rollback" in (diagnosis.suggested_action or "").lower():
+        action = "rollback_deploy"
+
+    token, jti = mint_approval_token(incident_id, action, approved_by="pending")
+
+    async with get_session() as session:
+        session.add(Approval(
+            incident_id=incident_id,
+            token_jti=jti,
+            status="pending",
+            consumed=False,
+        ))
+        session.add(AuditLog(
+            incident_id=incident_id, actor="agent", action="approval_requested",
+            detail={"proposed_action": action, "risk_level": diagnosis.risk_level.value},
+        ))
+        await session.commit()
+
+    log.info("approval_requested", incident_id=incident_id, action=action)
+    return {}
+
+async def escalate_high_risk(state: AgentState) -> AgentState:
+    """For high-risk diagnoses: evidence only, no executable action, escalate to a human."""
+    incident_id = state["incident_id"]
+    async with get_session() as session:
+        session.add(AuditLog(
+            incident_id=incident_id, actor="agent", action="escalated_high_risk",
+            detail={"reason": "risk_level=high; no auto-action drafted"},
+        ))
+        await session.commit()
+    log.info("incident_escalated", incident_id=incident_id, reason="high_risk")
+    return {}
+
+def route_on_risk(state: AgentState) -> str:
+    """Conditional-edge function: decide the next node based on the diagnosis risk."""
+    diagnosis = state["diagnosis"]
+    if diagnosis is None:
+        raise ValueError("route_on_risk requires a diagnosis")
+    if diagnosis.risk_level.value == "high":
+        return "escalate_high_risk"
+    return "draft_action_and_request_approval"
