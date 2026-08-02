@@ -1,6 +1,10 @@
 import asyncio
 import json
+import sys
 from pathlib import Path
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from app.agent.graph import agent_graph
 
