@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import settings
 from app.core.logging import configure_logging, log
-from app.api import health, webhooks, auth, incidents
+from app.api import health, webhooks, auth, incidents, approvals
 
 configure_logging(settings.log_level)
 
@@ -25,3 +25,4 @@ app.include_router(health.router)
 app.include_router(webhooks.router)
 app.include_router(auth.router)
 app.include_router(incidents.router)
+app.include_router(approvals.router)

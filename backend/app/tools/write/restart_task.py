@@ -21,12 +21,12 @@ async def restart_ecs_task(cluster: str, service: str, approval_token: str) -> R
         log.warning("write_action_rejected", reason="action_mismatch", action="restart_task")
         raise ApprovalError("token does not authorize this action")
 
-    consumed = consume_token(claim.jti)
+    consumed = await consume_token(claim.jti)
     if not consumed:
         log.warning("write_action_rejected", reason="token_already_used", action="restart_task")
         raise ApprovalError("approval token already used")
 
-    ecs = boto3.client("ecs", region="ap-south-1")
+    ecs = boto3.client("ecs", region_name="ap-south-1")
     ecs.update_service(cluster=cluster, service=service, forceNewDeployment=True)
 
     log.info("write_action_executed", action="restart_task", incident_id=claim.incident_id,
