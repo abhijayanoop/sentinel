@@ -1,12 +1,10 @@
 import asyncio
-from sqlalchemy import select
 
 from app.core.db import get_session
 from app.core.logging import log
-from app.models.incident import Incident
 from app.models.audit_log import AuditLog
-from app.tools.write.restart_task import restart_ecs_task, ApprovalError
-from app.tools.write.rollback_deploy import rollback_deploy
+from app.tools.write.restart_task import restart_ecs_task, RestartResult, ApprovalError
+from app.tools.write.rollback_deploy import rollback_deploy, RollbackResult
 from app.jobs.verify import verify_and_record
 
 DEMO_CLUSTER = "sentinel-cluster"
@@ -19,6 +17,7 @@ def execute_approved_action(incident_id: int, action: str, token: str) -> None:
 
 async def _execute_async(incident_id: int, action: str, token: str) -> None:
     log.info("execution_started", incident_id=incident_id, action=action)
+    result: RestartResult | RollbackResult
     try:
         if action == "restart_task":
             result = await restart_ecs_task(DEMO_CLUSTER, DEMO_SERVICE, token)
