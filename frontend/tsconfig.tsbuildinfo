@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/api/client.ts","./src/components/approvalactions.tsx","./src/components/auditlog.tsx","./src/components/diagnosiscard.tsx","./src/components/evidencepanel.tsx","./src/components/incidentlist.tsx","./src/pages/dashboardpage.tsx","./src/pages/loginpage.tsx"],"version":"5.9.3"}

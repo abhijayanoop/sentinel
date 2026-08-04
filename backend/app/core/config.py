@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o"
     openai_embedding_model: str = "text-embedding-3-small"
     github_token: str | None = None
+    github_repo: str = "octocat/Hello-World"
     redis_url: str = "redis://localhost:6379/0"
     langfuse_secret_key: str = ""
     langfuse_public_key: str = ""

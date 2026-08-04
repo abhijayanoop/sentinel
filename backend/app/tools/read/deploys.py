@@ -13,7 +13,7 @@ class DeployResult(BaseModel):
     deploys: list[Deploy]
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=8))
-def get_recent_deploys(repo: str = "your-username/your-demo-repo", limit: int = 5) -> DeployResult:
+def get_recent_deploys(repo: str = settings.github_repo, limit: int = 5) -> DeployResult:
     url = f"https://api.github.com/repos/{repo}/commits"
     headers = {"Accept": "application/vnd.github+json"}
     if settings.github_token:

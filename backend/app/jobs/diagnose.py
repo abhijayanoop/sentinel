@@ -33,6 +33,10 @@ async def _run_diagnosis_async(incident_id: int) -> None:
     diagnosis = result["diagnosis"]
 
     async with get_session() as session:
+        incident = (await session.execute(
+            select(Incident).where(Incident.id == incident_id)
+        )).scalar_one()
+
         session.add(DiagnosisModel(
             incident_id=incident_id,
             root_cause_hypothesis=diagnosis.root_cause_hypothesis,

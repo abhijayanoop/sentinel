@@ -20,7 +20,7 @@ async def search_past_incidents(query: str, limit:int = 5) -> MemoryResult:
             select(
                 IncidentMemory.summary, 
                 IncidentMemory.outcome, 
-                IncidentMemory.embedding.cosine_similiarity(query_embedding).label("distance")
+                IncidentMemory.embedding.cosine_distance(query_embedding).label("distance")
             ).order_by("distance").limit(limit)
         )
         rows = (await session.execute(stmt)).all()
