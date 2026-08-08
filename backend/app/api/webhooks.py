@@ -6,8 +6,10 @@ from app.core.config import settings
 from app.core.logging import log
 from app.core.db import get_session
 from app.models.incident import Incident
-from app.core.queue import diagnosis_queue
+from app.core.queue import diagnosis_queue, DEFAULT_RETRY
+from app.core.rate_limit import limiter
 from app.jobs.diagnose import run_diagnosis
+
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
@@ -16,6 +18,7 @@ def verify_signature(raw_body: bytes, signature_header: str) -> bool:
     return hmac.compare_digest(expected, signature_header)
 
 @router.post("/cloudwatch")
+@limiter.limit("60/minute")
 async def cloudwatch_webhook(request: Request):
     raw_body = await request.body()
     signature_header = request.headers.get("X-Signature", "")
@@ -42,5 +45,5 @@ async def cloudwatch_webhook(request: Request):
             return {"status": "duplicate_ignored"}
 
     log.info("incident_created", incident_id=incident.id, source="cloudwatch")
-    diagnosis_queue.enqueue(run_diagnosis, incident.id)
+    diagnosis_queue.enqueue(run_diagnosis, incident.id, retry=DEFAULT_RETRY)
     return {"status": "accepted", "incident_id": incident.id}

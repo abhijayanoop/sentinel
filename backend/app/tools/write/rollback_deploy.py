@@ -2,6 +2,7 @@ import boto3
 from pydantic import BaseModel
 
 from app.core.approval_tokens import verify_approval_token, consume_token
+from app.core.aws import BOTO_CONFIG
 from app.core.logging import log
 from app.tools.write.restart_task import ApprovalError
 
@@ -23,7 +24,7 @@ async def rollback_deploy(cluster: str, service: str, approval_token: str) -> Ro
         log.warning("write_action_rejected", reason="token_already_used", action="rollback_deploy")
         raise ApprovalError("approval token already used")
 
-    ecs = boto3.client("ecs", region_name="ap-south-1")
+    ecs = boto3.client("ecs", region_name="ap-south-1", config=BOTO_CONFIG)
 
     svc = ecs.describe_services(cluster=cluster, services=[service])["services"][0]
     current_td_arn = svc["taskDefinition"]

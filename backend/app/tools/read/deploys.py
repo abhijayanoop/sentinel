@@ -19,7 +19,8 @@ def get_recent_deploys(repo: str = settings.github_repo, limit: int = 5) -> Depl
     if settings.github_token:
         headers["Authorization"] = f"Bearer {settings.github_token}"
 
-    res = httpx.get(url, headers=headers, params={"per_page": limit}, timeout=10)
+    with httpx.Client(timeout=10.0) as client:
+        res = client.get(url, headers=headers, params={"per_page": limit})
     res.raise_for_status()
 
     deploys = [

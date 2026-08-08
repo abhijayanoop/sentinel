@@ -2,7 +2,9 @@ import boto3
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-_ecs = boto3.client("ecs", region_name="ap-south-1")
+from app.core.aws import BOTO_CONFIG
+
+_ecs = boto3.client("ecs", region_name="ap-south-1", config=BOTO_CONFIG)
 
 
 class ServiceEvent(BaseModel):
