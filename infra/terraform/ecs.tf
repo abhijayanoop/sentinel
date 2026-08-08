@@ -13,16 +13,43 @@ resource "aws_ecs_task_definition" "backend" {
 
   container_definitions = jsonencode([
     {
-      name         = "backend"
-      image        = var.app_image
-      essential    = true
-      portMappings = [{ containerPort = 8000, protocol = "tcp" }]
+      name      = "backend"
+      image     = var.app_image
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8000
+          protocol      = "tcp"
+        }
+      ]
+
       environment = [
         { name = "ENVIRONMENT", value = "production" },
-        { name = "DATABASE_URL", value = "postgresql+psycopg://sentinel_admin:${var.db_password}@${aws_db_instance.sentinel_db.address}:5432/sentinel" },
-        { name = "WEBHOOK_SECRET", value = var.webhook_secret },
-        { name = "JWT_SECRET", value = var.jwt_secret },
+        { name = "OPENAI_MODEL", value = "gpt-4o" },
+        { name = "OPENAI_EMBEDDING_MODEL", value = "text-embedding-3-small" },
+        { name = "AWS_REGION", value = var.aws_region },
       ]
+
+      secrets = [
+        { name = "WEBHOOK_SECRET", valueFrom = data.aws_secretsmanager_secret.webhook.arn },
+        { name = "JWT_SECRET", valueFrom = data.aws_secretsmanager_secret.jwt.arn },
+        { name = "DB_PASSWORD", valueFrom = data.aws_secretsmanager_secret.db_password.arn },
+        { name = "OPENAI_API_KEY", valueFrom = data.aws_secretsmanager_secret.openai.arn },
+      ]
+
+      environment = concat(
+        [
+          { name = "ENVIRONMENT", value = "production" },
+          { name = "OPENAI_MODEL", value = "gpt-4o" },
+          { name = "OPENAI_EMBEDDING_MODEL", value = "text-embedding-3-small" },
+          { name = "AWS_REGION", value = var.aws_region },
+          { name = "DATABASE_HOST", value = aws_db_instance.sentinel_db.address },
+          { name = "DATABASE_PORT", value = "5432" },
+          { name = "DATABASE_NAME", value = "sentinel" },
+          { name = "DATABASE_USER", value = "sentinel_admin" },
+        ]
+      )
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
