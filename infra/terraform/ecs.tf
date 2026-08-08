@@ -28,6 +28,10 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "OPENAI_MODEL", value = "gpt-4o" },
         { name = "OPENAI_EMBEDDING_MODEL", value = "text-embedding-3-small" },
         { name = "AWS_REGION", value = var.aws_region },
+        { name = "DATABASE_HOST", value = aws_db_instance.sentinel_db.address },
+        { name = "DATABASE_PORT", value = "5432" },
+        { name = "DATABASE_NAME", value = "sentinel" },
+        { name = "DATABASE_USER", value = "sentinel_admin" },
       ]
 
       secrets = [
@@ -36,19 +40,6 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DB_PASSWORD", valueFrom = data.aws_secretsmanager_secret.db_password.arn },
         { name = "OPENAI_API_KEY", valueFrom = data.aws_secretsmanager_secret.openai.arn },
       ]
-
-      environment = concat(
-        [
-          { name = "ENVIRONMENT", value = "production" },
-          { name = "OPENAI_MODEL", value = "gpt-4o" },
-          { name = "OPENAI_EMBEDDING_MODEL", value = "text-embedding-3-small" },
-          { name = "AWS_REGION", value = var.aws_region },
-          { name = "DATABASE_HOST", value = aws_db_instance.sentinel_db.address },
-          { name = "DATABASE_PORT", value = "5432" },
-          { name = "DATABASE_NAME", value = "sentinel" },
-          { name = "DATABASE_USER", value = "sentinel_admin" },
-        ]
-      )
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -74,4 +65,14 @@ resource "aws_ecs_service" "backend" {
     security_groups  = [aws_security_group.app.id]
     assign_public_ip = true
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend.arn
+    container_name   = "backend"
+    container_port   = 8000
+  }
+
+  health_check_grace_period_seconds = 60
+
+  depends_on = [aws_lb_listener.http]
 }

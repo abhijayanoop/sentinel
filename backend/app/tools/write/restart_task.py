@@ -2,6 +2,7 @@ import boto3
 from pydantic import BaseModel
 
 from app.core.approval_tokens import verify_approval_token, consume_token
+from app.core.aws import BOTO_CONFIG
 from app.core.logging import log
 
 class RestartResult(BaseModel):
@@ -26,7 +27,7 @@ async def restart_ecs_task(cluster: str, service: str, approval_token: str) -> R
         log.warning("write_action_rejected", reason="token_already_used", action="restart_task")
         raise ApprovalError("approval token already used")
 
-    ecs = boto3.client("ecs", region_name="ap-south-1")
+    ecs = boto3.client("ecs", region_name="ap-south-1", config=BOTO_CONFIG)
     ecs.update_service(cluster=cluster, service=service, forceNewDeployment=True)
 
     log.info("write_action_executed", action="restart_task", incident_id=claim.incident_id,

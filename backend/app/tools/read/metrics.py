@@ -3,8 +3,13 @@ from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 from app.core.config import settings
+from app.core.aws import BOTO_CONFIG
 
-_cw_client = boto3.client("cloudwatch", region_name=settings.aws_region if hasattr(settings, "aws_region") else "ap-south-1")
+_cw_client = boto3.client(
+    "cloudwatch",
+    region_name=settings.aws_region if hasattr(settings, "aws_region") else "ap-south-1",
+    config=BOTO_CONFIG,
+)
 
 class MetricPoint(BaseModel):
     timestamp: str
