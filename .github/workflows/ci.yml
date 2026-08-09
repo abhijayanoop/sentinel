@@ -48,7 +48,7 @@ jobs:
 
       - name: Run migrations
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sentinel_test
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/sentinel_test
           JWT_SECRET: test-secret-not-real
           WEBHOOK_SECRET: test-secret-not-real
           OPENAI_API_KEY: sk-test-not-real
@@ -56,7 +56,7 @@ jobs:
 
       - name: Unit tests
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sentinel_test
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/sentinel_test
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-not-real
           WEBHOOK_SECRET: test-secret-not-real
