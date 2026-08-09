@@ -1,0 +1,98 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: sentinel-backend
+  ECS_CLUSTER: sentinel-cluster
+  ECS_SERVICE: sentinel-backend-service
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC — no long-lived keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Record the CURRENT task definition (for rollback)
+        id: current
+        run: |
+          CURRENT_TD=$(aws ecs describe-services \
+            --cluster $ECS_CLUSTER --services $ECS_SERVICE \
+            --query 'services[0].taskDefinition' --output text)
+          echo "task_def=$CURRENT_TD" >> $GITHUB_OUTPUT
+          echo "Current task definition: $CURRENT_TD"
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd backend
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "IMAGE=$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Register new task definition and deploy
+        run: |
+          TD=$(aws ecs describe-task-definition --task-definition sentinel-backend \
+            --query 'taskDefinition' --output json)
+          NEW_TD=$(echo $TD | jq --arg IMAGE "$IMAGE" \
+            '.containerDefinitions[0].image = $IMAGE
+             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                   .compatibilities, .registeredAt, .registeredBy)')
+          NEW_ARN=$(aws ecs register-task-definition --cli-input-json "$NEW_TD" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE \
+            --task-definition $NEW_ARN
+
+      - name: Wait for the service to stabilize
+        id: stabilize
+        continue-on-error: true # we handle failure ourselves below
+        run: |
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
+
+      - name: Verify health through the ALB
+        id: health
+        continue-on-error: true
+        run: |
+          ALB=$(aws elbv2 describe-load-balancers --names sentinel-alb \
+            --query 'LoadBalancers[0].DNSName' --output text)
+          for i in $(seq 1 10); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB/health || echo "000")
+            echo "attempt $i: $CODE"
+            if [ "$CODE" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "health check never returned 200"
+          exit 1
+
+      - name: ROLLBACK if unhealthy
+        if: steps.stabilize.outcome == 'failure' || steps.health.outcome == 'failure'
+        run: |
+          echo "::error::Deploy failed health verification — rolling back to ${{ steps.current.outputs.task_def }}"
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE \
+            --task-definition ${{ steps.current.outputs.task_def }}
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
+          exit 1
+
+      - name: Deploy succeeded
+        if: steps.stabilize.outcome == 'success' && steps.health.outcome == 'success'
+        run: echo "Deployed ${{ github.sha }} successfully"
