@@ -71,14 +71,34 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sentinel_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
       - run: uv python install 3.12
       - run: uv sync
 
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/sentinel_test
+          JWT_SECRET: test-secret-not-real
+          WEBHOOK_SECRET: test-secret-not-real
+          OPENAI_API_KEY: sk-test-not-real
+        run: uv run alembic upgrade head
+
       - name: Run eval harness (fails if accuracy regresses)
         env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/sentinel_test
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4o
           OPENAI_EMBEDDING_MODEL: text-embedding-3-small
