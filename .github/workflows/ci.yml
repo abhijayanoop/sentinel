@@ -82,4 +82,6 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4o
           OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+          JWT_SECRET: test-secret-not-real
+          WEBHOOK_SECRET: test-secret-not-real
         run: uv run python -m app.eval.run_eval
