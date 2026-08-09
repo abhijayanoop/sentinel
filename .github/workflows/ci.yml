@@ -49,6 +49,9 @@ jobs:
       - name: Run migrations
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sentinel_test
+          JWT_SECRET: test-secret-not-real
+          WEBHOOK_SECRET: test-secret-not-real
+          OPENAI_API_KEY: sk-test-not-real
         run: uv run alembic upgrade head
 
       - name: Unit tests
@@ -57,6 +60,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-not-real
           WEBHOOK_SECRET: test-secret-not-real
+          OPENAI_API_KEY: sk-test-not-real
         run: uv run pytest tests/ -v
 
   eval-gate:
