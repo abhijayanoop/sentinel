@@ -24,3 +24,7 @@ override.tf.json
 *tfplan*
 .terraformrc
 terraform.rc
+infra/lambda/*.zip
+
+# Editor
+.vscode/

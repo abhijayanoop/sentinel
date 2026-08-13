@@ -20,7 +20,7 @@ resource "aws_ecr_repository" "sentinel_backend" {
 resource "aws_db_instance" "sentinel_db" {
   identifier             = "sentinel-db"
   engine                 = "postgres"
-  engine_version         = "16"
+  engine_version         = "16.13"
   instance_class         = "db.t4g.micro"
   allocated_storage      = 20
   db_name                = "sentinel"
@@ -30,6 +30,12 @@ resource "aws_db_instance" "sentinel_db" {
   publicly_accessible    = false
   vpc_security_group_ids = [aws_security_group.db.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
+
+  # the real password lives in Secrets Manager (sentinel/db-password) and is
+  # managed/rotated there, not through Terraform
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_cloudwatch_log_group" "sentinel" {

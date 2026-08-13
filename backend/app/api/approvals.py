@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
 
 from app.api.deps import get_current_user
@@ -8,13 +8,12 @@ from app.models.approval import Approval
 from app.models.audit_log import AuditLog
 from app.models.diagnosis import Diagnosis as DiagnosisModel
 from app.core.approval_tokens import mint_approval_token
-from app.core.queue import diagnosis_queue
-from app.jobs.execute_action import execute_approved_action
+from app.jobs.execute_action import execute_approved_action_async
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
 
 @router.post("/{incident_id}/approve")
-async def approve_action(incident_id: int, current_user: str = Depends(get_current_user)):
+async def approve_action(incident_id: int, background_tasks: BackgroundTasks, current_user: str = Depends(get_current_user)):
     async with get_session() as session:
         approval = (await session.execute(select(Approval).where(Approval.incident_id == incident_id))).scalar_one_or_none()
         if approval is None:
@@ -40,7 +39,7 @@ async def approve_action(incident_id: int, current_user: str = Depends(get_curre
         ))
         await session.commit()
 
-    diagnosis_queue.enqueue(execute_approved_action, incident_id, action, token)
+    background_tasks.add_task(execute_approved_action_async, incident_id, action, token)
     log.info("action_approved", incident_id=incident_id, approved_by=current_user, action=action)
     return {"status": "approved", "action": action}
 

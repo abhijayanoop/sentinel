@@ -36,8 +36,18 @@ async def client(db_session_maker):
     import app.api.webhooks as webhooks_module
     import app.api.auth as auth_module
     import app.api.incidents as incidents_module
-    for mod in (webhooks_module, auth_module, incidents_module):
+    import app.api.approvals as approvals_module
+    for mod in (webhooks_module, auth_module, incidents_module, approvals_module):
         mod.get_session = override_get_session
+
+    # background tasks run in-process (and synchronously, under the ASGI test
+    # transport) — stub out the agent pipeline so route tests don't make real
+    # LLM/AWS calls or touch the real dev database via app/jobs' own get_session
+    async def _noop(*args, **kwargs):
+        pass
+
+    webhooks_module.run_diagnosis_async = _noop
+    approvals_module.execute_approved_action_async = _noop
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

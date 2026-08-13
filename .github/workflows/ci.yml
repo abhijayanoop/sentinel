@@ -24,9 +24,6 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 10s
           --health-timeout 5s --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
 
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +54,6 @@ jobs:
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/sentinel_test
-          REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-not-real
           WEBHOOK_SECRET: test-secret-not-real
           OPENAI_API_KEY: sk-test-not-real
