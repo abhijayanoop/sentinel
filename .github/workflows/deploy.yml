@@ -57,7 +57,8 @@ jobs:
           NEW_TD=$(echo $TD | jq --arg IMAGE "$IMAGE" \
             '.containerDefinitions[0].image = $IMAGE
              | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
-                   .compatibilities, .registeredAt, .registeredBy)')
+                   .compatibilities, .registeredAt, .registeredBy,
+                   .containerDefinitions[0].command)')
           NEW_ARN=$(aws ecs register-task-definition --cli-input-json "$NEW_TD" \
             --query 'taskDefinition.taskDefinitionArn' --output text)
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE \
