@@ -1,5 +1,3 @@
-import asyncio
-
 from app.core.db import get_session
 from app.core.logging import log
 from app.models.audit_log import AuditLog
@@ -11,11 +9,7 @@ DEMO_CLUSTER = "sentinel-cluster"
 DEMO_SERVICE = "sentinel-backend-service"
 
 
-def execute_approved_action(incident_id: int, action: str, token: str) -> None:
-    asyncio.run(_execute_async(incident_id, action, token))
-
-
-async def _execute_async(incident_id: int, action: str, token: str) -> None:
+async def execute_approved_action_async(incident_id: int, action: str, token: str) -> None:
     log.info("execution_started", incident_id=incident_id, action=action)
     result: RestartResult | RollbackResult
     try:

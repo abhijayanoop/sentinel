@@ -23,4 +23,4 @@ override.tf.json
 *_override.tf.json
 *tfplan*
 .terraformrc
-terraform.rc
+terraform.rcinfra/lambda/*.zip

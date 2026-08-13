@@ -1,4 +1,3 @@
-import asyncio
 from sqlalchemy import select
 from app.core.db import get_session
 from app.core.logging import log
@@ -7,10 +6,7 @@ from app.models.incident import Incident
 from app.models.diagnosis import Diagnosis as DiagnosisModel
 from app.models.audit_log import AuditLog
 
-def run_diagnosis(incident_id: int) -> None:
-    asyncio.run(_run_diagnosis_async(incident_id))
-
-async def _run_diagnosis_async(incident_id: int) -> None:
+async def run_diagnosis_async(incident_id: int) -> None:
     async with get_session() as session:
         incident = (await session.execute(
             select(Incident).where(Incident.id == incident_id)
