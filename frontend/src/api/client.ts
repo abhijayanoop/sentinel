@@ -1,5 +1,6 @@
 import type { Incident, IncidentDetail } from "../types";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const TOKEN_KEY = "sentinel_token";
 
 export function getToken(): string | null {
@@ -32,7 +33,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(`/api${path}`, { ...init, headers });
+  const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
 
   if (!res.ok) {
     let detail = res.statusText;

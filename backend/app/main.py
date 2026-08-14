@@ -7,6 +7,7 @@ if sys.platform == "win32":
 from contextlib import asynccontextmanager
 from typing import cast
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import configure_logging, log
 from app.api import health, webhooks, auth, incidents, approvals
@@ -25,6 +26,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+# lets the locally-run frontend (Vite dev server) call the deployed AWS API
+# directly, bypassing Vite's dev proxy
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(health.router)
 app.include_router(webhooks.router)
